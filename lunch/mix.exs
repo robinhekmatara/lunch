@@ -15,14 +15,16 @@ defmodule Lunch.MixProject do
   def application do
     [
       mod: { Lunch.Runtime.Application, [] },
-      extra_applications: [:logger]
+      extra_applications: [:logger],
     ]
   end
 
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:phoenix_pubsub, "~> 2.1"}
+      {:phoenix_pubsub, "~> 2.1"},
+
+      {:lunch_datastore, path: "../lunch_datastore"}
       # {:dep_from_hexpm, "~> 0.3.0"},
       # {:dep_from_git, git: "https://github.com/elixir-lang/my_dep.git", tag: "0.1.0"}
     ]

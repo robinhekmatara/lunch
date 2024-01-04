@@ -1,6 +1,7 @@
 defmodule Lunch.Impl.Core do
 
   defstruct(
+    id: nil,
     name: nil,
     users: [],
     join_code: nil,
@@ -8,8 +9,9 @@ defmodule Lunch.Impl.Core do
     chosen_alternative: nil
   )
 
-  def new_lunch(alternatives, name, user) do
+  def new_lunch(name, alternatives, user, id \\ nil) do
     %__MODULE__{
+      id: id,
       name: name,
       alternatives: alternatives,
       join_code: "123",

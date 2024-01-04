@@ -6,8 +6,7 @@ defmodule Lunch.Runtime.Application do
     supervisor_spec = [
       {DynamicSupervisor, strategy: :one_for_one, name: __MODULE__},
       {Registry, keys: :unique, name: LunchRegistry},
-      {Phoenix.PubSub, name: :my_pubsub}
-
+      {Phoenix.PubSub, name: :my_pubsub},
     ]
     Supervisor.start_link(supervisor_spec, strategy: :one_for_one)
 
