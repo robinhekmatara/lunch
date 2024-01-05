@@ -1,9 +1,9 @@
 defmodule LunchClientWeb.Live.Home do
   use Phoenix.LiveView
 
-  def handle_event("submit", %{ "group_name" => group_name, "user_name" => user_name}, socket) do
-    pid = Lunch.new_lunch(group_name, user_name)
-    Phoenix.PubSub.subscribe(:my_pubsub, "lunch:#{group_name}")
+  def handle_event("submit", %{ "party_name" => party_name, "user_name" => user_name}, socket) do
+    pid = Lunch.new_lunch(party_name, user_name)
+    Phoenix.PubSub.subscribe(:my_pubsub, "lunch:#{party_name}")
     lunch = Lunch.get(pid)
     {:noreply, assign(socket, %{ pid: pid, lunch: lunch}) }
   end

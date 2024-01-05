@@ -1,4 +1,4 @@
-defmodule LunchDatastore.Database.GroupAlternative do
+defmodule LunchDatastore.Database.PartyAlternative do
   use Ecto.Schema
 
   schema "party_alternative" do

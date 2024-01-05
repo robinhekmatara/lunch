@@ -13,8 +13,6 @@ defmodule Lunch do
   end
 
   def get_lunch(pid) do
-    res = GenServer.call(pid, {:get_lunch})
-    Phoenix.PubSub.broadcast(:my_pubsub, "lunch:#{res.name}", {:updated_lunch, res})
-    res
+    GenServer.call(pid, {:get_lunch})
   end
 end

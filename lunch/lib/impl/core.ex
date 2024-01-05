@@ -9,13 +9,13 @@ defmodule Lunch.Impl.Core do
     chosen_alternative: nil
   )
 
-  def new_lunch(name, alternatives, user, id \\ nil) do
+  def new_lunch(name, users, alternatives \\ [], id \\ nil) do
     %__MODULE__{
       id: id,
       name: name,
       alternatives: alternatives,
       join_code: "123",
-      users: [user]
+      users: users
     }
   end
 
@@ -27,7 +27,13 @@ defmodule Lunch.Impl.Core do
     %{lunch | users: [user | lunch.users]}
   end
 
-  def get_lunch(lunch) do
-    %{lunch | chosen_alternative: Enum.random(lunch.alternatives)}
+  def get_lunch(%{alternatives: [ _h | _t ] = alternatives} = lunch)  do
+    chosen_alternative = Enum.random(alternatives)
+
+    %{lunch | chosen_alternative: chosen_alternative }
+  end
+
+  def get_lunch(%{alternatives: []} = lunch)  do
+    lunch
   end
 end

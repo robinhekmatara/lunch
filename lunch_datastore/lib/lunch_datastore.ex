@@ -5,39 +5,52 @@ defmodule LunchDatastore do
   alias LunchDatastore.Database.Repo
 
   alias LunchDatastore.Database.ChosenAlternative
-  alias LunchDatastore.Database.Group
-  alias LunchDatastore.Database.GroupUser
+  alias LunchDatastore.Database.Party
+  alias LunchDatastore.Database.PartyUser
+  alias LunchDatastore.Database.PartyAlternative
   alias LunchDatastore.Database.User
 
   def insert_user(name) do
-    %User{name: name}
-    |> Repo.insert(
-        on_conflict: {:replace_all_except, [:id]},
-        conflict_target: :name
-      )
+    case %User{}
+    |> User.changeset(%{ name: name })
+    |> Repo.insert() do
+      { :ok, user} ->
+        user
+      { :error, changeset} ->
+        IO.inspect(changeset)
+        get_user(name)
+    end
   end
 
-  def insert_group(name) do
-    { :ok, group } = %Group{name: name}
-    |> Repo.insert(on_conflict: :nothing)
-    group.id
+  def insert_party(name) do
+    {:ok, party } = %Party{name: name}
+    |> Repo.insert()
+    party
   end
 
-  def update_group(id, name) do
-    { :ok, group } = get_group_by_id(id)
+  def update_party_name(id, name) do
+    {:ok, party } = get_party_by_id(id)
     |> Ecto.Changeset.change(%{name: name})
     |> Repo.update()
-    group.id
+    party
   end
 
-  def insert_group_user(group_id, user_id) do
-    %GroupUser{party_id: group_id, user_id: user_id}
-   |> Repo.insert(on_conflict: :nothing)
+  def insert_party_user(party_id, user_id) do
+    { :ok, party_user } = %PartyUser{party_id: party_id, user_id: user_id}
+    |> Repo.insert(on_conflict: :nothing)
+    party_user
   end
 
   def insert_chosen_alternative(id, alternative) do
-    %ChosenAlternative{alternative: alternative, party_id: id}
+    { :ok, chosen_alternative } = %ChosenAlternative{alternative: alternative, party_id: id}
     |> Repo.insert()
+    chosen_alternative
+  end
+
+  def insert_party_alternative(id, alternative) do
+    { :ok, party_alternative } = %PartyAlternative{alternative: alternative, party_id: id}
+    |> Repo.insert()
+    party_alternative
   end
 
   def get_user(username) do
@@ -46,30 +59,33 @@ defmodule LunchDatastore do
     )
   end
 
-  def get_lunch(id) do
-    result = Repo.all(from g in Group,
-      join: gu in GroupUser, on: gu.party_id == g.id,
-      join: u in User, on: gu.user_id == u.id,
-      where: g.id == ^id)
-    case result do
-      [ h | _ ] -> h
-      _         -> nil
-    end
+  def get_party_with_users_and_alternatives(id) do
+    Repo.one(from p in Party,
+      left_join: pu in PartyUser, on: pu.party_id == p.id,
+      left_join: pa in PartyAlternative, on: pa.party_id == p.id,
+      left_join: u in User, on: pu.user_id == u.id,
+      where: p.id == ^id,
+      group_by: p.id,
+      select: %{
+        party_id: p.id,
+        party_name: p.name,
+        users: fragment("ARRAY_REMOVE(ARRAY_AGG(DISTINCT ?), null)", u.name),
+        alternatives: fragment("ARRAY_REMOVE(ARRAY_AGG(DISTINCT ?), null)", pa.alternative)
+      })
   end
 
-
-  def get_groups_by_user(name) do
+  def get_parties_by_user(name) do
     Repo.all(from u in User,
-      join: gu in GroupUser, on: gu.user_id == u.id,
-      join: g in Group, on: gu.party_id == g.id,
-      select: %{group_id: g.id, name: g.name},
+      join: pu in PartyUser, on: pu.user_id == u.id,
+      join: p in Party, on: pu.party_id == p.id,
+      select: %{party_id: p.id, name: p.name},
       where: u.name == ^name
     )
   end
 
-  def get_group_by_id(id) do
-    Repo.one(from g in Group,
-      where: g.id == ^id
+  def get_party_by_id(id) do
+    Repo.one(from p in Party,
+      where: p.id == ^id
     )
   end
 end

@@ -13,24 +13,27 @@ defmodule Lunch.Runtime.Server do
   end
 
   def init({ name, username }) do
-    lunch = LunchDatastore.get_lunch(6)
+    lunch = LunchDatastore.get_party_with_users_and_alternatives(6)
     |> initialize_lunch({ name, get_user(username) })
     { :ok, lunch }
   end
 
   def initialize_lunch(nil, { name, user }) do
-    default_alternatives = ["Länsrätten", "Zaap", "Filmhuset", "580", "Phils", "Ai Ramen", "TV4", "Lulu"]
-    Core.new_lunch(name, default_alternatives, user)
+    Core.new_lunch(name, [user], [])
   end
 
-  def initialize_lunch(lunch, { name, user }) do
-    default_alternatives = ["Länsrätten", "Zaap", "Filmhuset", "580", "Phils", "Ai Ramen", "TV4", "Lulu"]
-    Core.new_lunch(name, default_alternatives, user, lunch.id)
+  def initialize_lunch(%{party_id: id, users: users, alternatives: alternatives}, { name, _ }) do
+    Core.new_lunch(name,  users, alternatives, id)
   end
 
   def handle_call({ :get_lunch }, _from, lunch) do
     lunch = Core.get_lunch(lunch)
-    { :stop, :normal, lunch, lunch }
+    if lunch.chosen_alternative == nil do
+      { :reply, lunch, lunch }
+    else
+      Phoenix.PubSub.broadcast(:my_pubsub, "lunch:#{lunch.name}", {:updated_lunch, lunch})
+      { :stop, :normal, lunch, lunch }
+    end
   end
 
   def handle_call({ :add_user, username}, _from, lunch) do
@@ -42,10 +45,10 @@ defmodule Lunch.Runtime.Server do
     { :reply, lunch, lunch}
   end
 
-  def terminate(_reason, state) do
-    id = insert_group(state.id, state.name)
-    Enum.each(state.users, fn user -> LunchDatastore.insert_user(user.name) end)
-    Enum.each(state.users, fn user -> insert_group_user(id, user) end)
+  def terminate(reason, state) do
+    %{id: id } = insert_party(state.id, state.name)
+    Enum.each(state.users, fn user -> LunchDatastore.insert_user(user) end)
+    Enum.each(state.users, fn user -> insert_party_user(id, user) end)
     LunchDatastore.insert_chosen_alternative(id, state.chosen_alternative)
 
     state
@@ -58,15 +61,11 @@ defmodule Lunch.Runtime.Server do
     end
   end
 
-  defp insert_group(nil, name), do: LunchDatastore.insert_group(name)
-  defp insert_group(id,  name), do: LunchDatastore.update_group(id, name)
+  defp insert_party(nil, name), do: LunchDatastore.insert_party(name)
+  defp insert_party(id,  name), do: LunchDatastore.update_party_name(id, name)
 
-  defp insert_group_user(group_id, %{id: nil, name: name}) do
+  defp insert_party_user(party_id, name) do
     user = LunchDatastore.get_user(name)
-    LunchDatastore.insert_group_user(group_id, user.id)
-  end
-
-  defp insert_group_user(group_id, %{id: user_id, name: name}) do
-    LunchDatastore.insert_group_user(group_id, user_id)
+    LunchDatastore.insert_party_user(party_id, user.id)
   end
 end

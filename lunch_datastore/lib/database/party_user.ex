@@ -1,4 +1,4 @@
-defmodule LunchDatastore.Database.GroupUser do
+defmodule LunchDatastore.Database.PartyUser do
   use Ecto.Schema
 
   schema "party_user" do
