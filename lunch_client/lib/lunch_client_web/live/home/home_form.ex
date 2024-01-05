@@ -1,5 +1,16 @@
 defmodule LunchClientWeb.Live.Home.HomeForm do
-  use Phoenix.Component
+  use LunchClientWeb, :live_component
+  use LiveViewNative.LiveComponent
+
+  def form(%{format: :swiftui} = assigns) do
+    ~SWIFTUI"""
+      <LiveForm phx-submit="submit" id="login-form">
+        <TextField name="user_name" text="Skriv in ditt namn: "/>
+        <TextField name="group_name" text="Skriv in team: "/>
+        <LiveSubmitButton phx-value-extra="more info">Click Me!</LiveSubmitButton>
+      </LiveForm>
+    """
+  end
 
   def form(assigns) do
     ~H"""

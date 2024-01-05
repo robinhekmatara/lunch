@@ -1,5 +1,6 @@
 defmodule LunchClientWeb.Live.Home do
-  use Phoenix.LiveView
+  use LunchClientWeb, :live_view
+  use LiveViewNative.LiveView
 
   def handle_event("submit", %{ "group_name" => group_name, "user_name" => user_name}, socket) do
     pid = Lunch.new_lunch(group_name, user_name)
@@ -8,12 +9,27 @@ defmodule LunchClientWeb.Live.Home do
     {:noreply, assign(socket, %{ pid: pid, lunch: lunch}) }
   end
 
-  def handle_event("get_restaurant_clicked", _params, socket) do
+  def handle_event("get_restaurant_button_triggered", _params, socket) do
     { :noreply, assign(socket, :lunch, Lunch.get_lunch(socket.assigns.pid))}
   end
 
   def handle_info({:updated_lunch, lunch}, socket) do
     { :noreply, assign(socket, :lunch, lunch) }
+  end
+
+  def render(%{lunch: lunch, format: :swiftui} = assigns) do
+    ~SWIFTUI"""
+      <Text>Restaurant: <%= @lunch.chosen_alternative %></Text>
+      <Button phx-click="get_restaurant_button_triggered">Get restaurant!</Button>
+    """
+  end
+
+  def render(%{format: :swiftui} = assigns) do
+    ~SWIFTUI"""
+    <VStack>
+      <LunchClientWeb.Live.Home.HomeForm.form {assigns}/>
+    </VStack>
+    """
   end
 
   def render(%{lunch: lunch} = assigns) do
@@ -25,7 +41,7 @@ defmodule LunchClientWeb.Live.Home do
         <p>Restaurant:</p>
         <p><%= @lunch.chosen_alternative %></p>
       </div>
-      <button phx-click="get_restaurant_clicked" class="bg-blue-500 hover:bg-blue-700 text-white font-bold rounded py-2 px-2 mt-1">Get restaurant!</button>
+      <button phx-click="get_restaurant_button_triggered" class="bg-blue-500 hover:bg-blue-700 text-white font-bold rounded py-2 px-2 mt-1">Get restaurant!</button>
     </div>
     </div>
     """

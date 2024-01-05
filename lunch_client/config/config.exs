@@ -51,6 +51,23 @@ config :logger, :console,
 # Use Jason for JSON parsing in Phoenix
 config :phoenix, :json_library, Jason
 
+config :live_view_native,
+  plugins: [
+    # other plugins here...
+    LiveViewNative.SwiftUI,
+    LiveViewNative.Jetpack
+  ]
+
+# LiveView Native Stylesheet support
+# Omit this if you're not using platforms that support LiveView
+# Native stylesheets
+config :live_view_native_stylesheet,
+  parsers: [
+    swiftui: LiveViewNative.SwiftUI.RulesParser
+  ]
+
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.
 import_config "#{config_env()}.exs"
+
+import_config "native.exs"
